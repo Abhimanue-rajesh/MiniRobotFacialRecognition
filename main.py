@@ -2,6 +2,8 @@ import face_recognition
 import json
 import numpy as np
 from PIL import Image, ImageDraw
+import cv2
+import os
 
 
 def LearnNewFace(image, name):
@@ -30,10 +32,6 @@ def LearnNewFace(image, name):
             data = []  # Initialize as an empty list
 
 
-def StartCamera():
-    pass
-
-
 def LoadKnownEncodings():
     print("Fetching all the known face encodings from json file")
     # Open the file in read mode
@@ -58,34 +56,88 @@ def DetectFace(image):
 
     unknown_image = face_recognition.load_image_file(image)
 
-    # Find all the faces and face encodings in the unknown image
-    face_locations = face_recognition.face_locations(unknown_image)
-    face_encodings = face_recognition.face_encodings(unknown_image, face_locations)
+    try:
+        # Find all the faces and face encodings in the unknown image
+        face_locations = face_recognition.face_locations(unknown_image)
+        face_encodings = face_recognition.face_encodings(unknown_image, face_locations)
+    except Exception as error:
+        print("No face detected or :", error)
+
     # Convert the image to a PIL-format image so that we can draw on top of it with the Pillow library
-    # See http://pillow.readthedocs.io/ for more about PIL/Pillow
     pil_image = Image.fromarray(unknown_image)
     # Create a Pillow ImageDraw Draw instance to draw with
     draw = ImageDraw.Draw(pil_image)
 
-    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+    for (top, right, bottom, left), face_encoding in zip(
+        face_locations, face_encodings
+    ):
         # See if the face is a match for the known face(s)
         matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
 
         name = "Unknown"
 
         # Or instead, use the known face with the smallest distance to the new face
-        face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+        face_distances = face_recognition.face_distance(
+            known_face_encodings, face_encoding
+        )
         best_match_index = np.argmin(face_distances)
         if matches[best_match_index]:
             name = known_face_names[best_match_index]
-            print('Matching Name',name)
+            print("Matching Name", name)
             # Draw a box around the face using the Pillow module
             draw.rectangle(((left, top), (right, bottom)), outline=(0, 0, 255))
         else:
-            print('No Match')
-        
-        
+            print("No Match")
 
 
-# LearnNewFace("dhoni.jpg", "dhoni")
-DetectFace('another.jpg')
+def StartCamera():
+    # Define desired window size
+    desired_width = 640
+    desired_height = 480
+
+    # Define window name
+    window_name = "Robot Eyes"
+
+    # Create output directory if it doesn't exist
+    output_directory = "captured_faces"
+    # To store the captured faces
+    os.makedirs(output_directory, exist_ok=True)
+
+    # Initialize the camera
+    cap = cv2.VideoCapture(0)
+    while cap.isOpened():
+        ret, frame = cap.read()
+
+        if not ret:  # Handle frame read errors
+            print("Error reading frame.")
+            break
+
+        # Resize the frame (optional, if you want to resize before detection)
+        frame = cv2.resize(frame, (desired_width, desired_height))
+
+        # Create or resize the window
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(window_name, desired_width, desired_height)
+
+        # Convert the frame from BGR to RGB (as face_recognition uses RGB)
+        rgb_frame = frame[:, :, ::-1]
+
+        # Find all face locations in the frame
+        face_locations = face_recognition.face_locations(rgb_frame)
+
+        if face_locations:
+            print("Face Detected")
+            print("Face Location", face_locations)
+        else:
+            LearnNewFace(frame)
+
+        # Show the resized frame
+        cv2.imshow(window_name, frame)
+
+        # Handle key press for quitting
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    # Release resources
+    cap.release()
+    cv2.destroyAllWindows()

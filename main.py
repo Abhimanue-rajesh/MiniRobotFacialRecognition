@@ -22,7 +22,8 @@ def LearnNewFace(image, name):
                 print("Name already exists in the JSON file. Skipping addition.")
             else:
                 with open("known_faces.json", "w") as write_json_file:
-                    data.append({"name": name, "encoding": list(image_encoding)})
+                    data.append(
+                        {"name": name, "encoding": list(image_encoding)})
                     json.dump(data, write_json_file, indent=4)
                     print("Encodings with the name is saved to the file")
 
@@ -38,18 +39,20 @@ def LoadKnownEncodings():
     with open("known_faces.json", "r") as f:
         try:
             data = json.load(f)
-            return [item for item in data]  # Return a list of all name-encoding pairs
+            # Return a list of all name-encoding pairs
+            return [item for item in data]
         except json.JSONDecodeError:
             print("Error reading JSON file. Returning empty list.")
             return []  # Handle errors by returning an empty list
 
 
-def DetectFace(image):
+def RecognizeFace(image):
     name_encoding_pairs = LoadKnownEncodings()
 
     # Separate encodings and names
     known_face_names = [item["name"] for item in name_encoding_pairs]
-    known_face_encodings = [np.array(item["encoding"]) for item in name_encoding_pairs]
+    known_face_encodings = [np.array(item["encoding"])
+                            for item in name_encoding_pairs]
 
     # print('Encodings: ',encodings)
     # print('name',names)
@@ -59,7 +62,8 @@ def DetectFace(image):
     try:
         # Find all the faces and face encodings in the unknown image
         face_locations = face_recognition.face_locations(unknown_image)
-        face_encodings = face_recognition.face_encodings(unknown_image, face_locations)
+        face_encodings = face_recognition.face_encodings(
+            unknown_image, face_locations)
     except Exception as error:
         print("No face detected or :", error)
 
@@ -72,7 +76,8 @@ def DetectFace(image):
         face_locations, face_encodings
     ):
         # See if the face is a match for the known face(s)
-        matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+        matches = face_recognition.compare_faces(
+            known_face_encodings, face_encoding)
 
         name = "Unknown"
 
@@ -87,7 +92,8 @@ def DetectFace(image):
             # Draw a box around the face using the Pillow module
             draw.rectangle(((left, top), (right, bottom)), outline=(0, 0, 255))
         else:
-            print("No Match")
+            name = input('Please Enter your Name:')
+            LearnNewFace(image, name)
 
 
 def StartCamera():
@@ -125,12 +131,19 @@ def StartCamera():
         # Find all face locations in the frame
         face_locations = face_recognition.face_locations(rgb_frame)
 
-        if face_locations:
-            print("Face Detected")
-            print("Face Location", face_locations)
-        else:
-            LearnNewFace(frame)
+        image_path = os.path.join(output_directory, f"detected_face_{len(os.listdir(output_directory)) + 1}.jpg")
 
+        if face_locations:
+            print("Face Detected at Location:", face_locations)
+            for (top, right, bottom, left) in face_locations:
+                # cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+                # Extract the face region
+                face_image = frame[top:bottom, left:right]
+                # Save the detected face image
+                cv2.imwrite(image_path, face_image)
+                #To recognize the face in the image
+                RecognizeFace(image_path)
+        
         # Show the resized frame
         cv2.imshow(window_name, frame)
 
@@ -141,3 +154,6 @@ def StartCamera():
     # Release resources
     cap.release()
     cv2.destroyAllWindows()
+
+
+StartCamera()

@@ -1,31 +1,50 @@
-# MiniRobotFacialRecognition
+<h1 align="center">MiniRobotFacialRecognition</h1>
 
-## 1. Installing Face Recognition
 
-1. First we will need to build the wheel for the model 
+This mini robot capable of facial recognition and executing user commands. The robot utilizes various technologies such as face recognition, speech synthesis and recognition, audio recording and processing, and GPIO interfacing for distance sensing.
 
-- 1.1 Check the python version installed in your system 
-    ```bash
-    python --version 
-    ```
-- 1.2 Create a virtual environment 
-    ```bash
-    pip install virtualenv  
-    ```
-    ```bash
-    virtualenv venv
-    ```
-    - Now you have created a virual environment named venv
-- 1.3 If python version is the latest - 3.11
-    - Download this repository from git hub
-    - https://github.com/z-mahmud22/Dlib_Windows_Python3.x
-    - Extract the files and copy this file - dlib-19.24.1-cp311-cp311-win_amd64.whl
-    - Move the file to the root directory 
-    - Run this command
-    ```bash
-    python -m pip install dlib-19.24.1-cp311-cp311-win_amd64.whl
-    ```
-- 1.4 Then install the face recoginition 
-    ```bash
-    pip install face_recognition 
-    ```
+## Key Components
+
+### Facial Recognition: 
+
+- The robot can detect and recognize human faces using the face_recognition library. It compares detected faces with known face encodings stored in a JSON file (known_faces.json). If a match is found, it greets the person. If not, it prompts the user to teach the robot the new face.
+
+### Speech Synthesis: 
+- Utilizing the gTTS (Google Text-to-Speech) library, the robot can convert text messages into speech. It uses this capability to greet individuals and prompt user interactions.
+
+### Speech Recognition: 
+- The robot can transcribe spoken commands into text using the speech_recognition library. This functionality enables users to give commands to the robot verbally.
+
+### Audio Recording and Processing: 
+- The robot can record audio using the sounddevice library, save it as a WAV file, and transcribe it to text. This feature allows for verbal interactions and command input.
+
+### Camera Interaction: 
+- The robot employs a camera (Picamera2) to capture images for facial recognition. It continuously monitors for faces, capturing images when detected.
+
+### GPIO Interfacing for Distance Sensing: 
+- The robot utilizes GPIO pins on a Raspberry Pi to interface with an ultrasonic distance sensor. It measures distances to detect the presence of individuals nearby. When someone is detected within a certain range, it triggers the facial recognition and interaction processes.
+
+## Code Structure
+
+- The code is structured into functions, each responsible for specific tasks:
+
+- LoadKnownEncodings: Loads known face encodings from a JSON file.
+- voice: Converts text to speech and plays the audio.
+- audio_to_text: Transcribes audio files to text using Google's speech recognition API.
+- record_audio: Records audio for a specified duration and saves it to a WAV file.
+- GreetPerson: Greets a recognized person and prompts for user interaction.
+- RequestLearnPerson: Requests to learn a new face if an unrecognized person is detected.
+- RecognizeFace: Performs facial recognition on captured images and triggers appropriate actions based on the result.
+- StartCamera: Initializes the camera and continuously captures images for face detection and recognition.
+- check_distance: Monitors distance using an ultrasonic sensor and initiates face recognition when someone is within range.
+- The main functionality is triggered by calling check_distance, which initiates the robot's operation by monitoring for nearby - individuals. Once someone is detected within a specified range, the robot starts the facial recognition process.
+
+## Interaction Flow
+
+- The robot monitors for nearby individuals using the ultrasonic sensor.
+- When someone is detected within range, the camera captures their image.
+- Facial recognition is performed on the captured image.
+- If the person is recognized, the robot greets them and awaits user commands.
+- If the person is not recognized, the robot requests to learn the new face.
+- Users can interact with the robot verbally by giving commands.
+- The robot executes the commands and communicates with other components, potentially including an Arduino for further actions.

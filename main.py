@@ -158,9 +158,6 @@ def StartCamera():
         pi_camera.close()
  
 
-
-
-
 def check_distance():
     UltraSonicTrig = 16
     UltraSonicEcho = 18
